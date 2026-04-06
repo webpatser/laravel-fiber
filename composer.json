@@ -1,0 +1,53 @@
+{
+    "name": "webpatser/laravel-fiber",
+    "description": "Fiber-based concurrency driver for Laravel using Revolt event loop",
+    "keywords": ["laravel", "fiber", "concurrency", "async", "revolt", "amphp"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Christoph Kempen",
+            "email": "christoph@downsized.nl"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "illuminate/contracts": "^11.0 || ^12.0 || ^13.0",
+        "illuminate/support": "^11.0 || ^12.0 || ^13.0",
+        "revolt/event-loop": "^1.0",
+        "amphp/amp": "^3.1"
+    },
+    "suggest": {
+        "amphp/http-client": "For async HTTP requests in concurrent tasks",
+        "amphp/mysql": "For async MySQL queries in concurrent tasks",
+        "amphp/redis": "For async Redis operations in concurrent tasks"
+    },
+    "require-dev": {
+        "illuminate/container": "^11.0 || ^12.0 || ^13.0",
+        "pestphp/pest": "^4.0",
+        "ramsey/uuid": "^4.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "Webpatser\\LaravelFiber\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Webpatser\\LaravelFiber\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Webpatser\\LaravelFiber\\FiberServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable"
+}
