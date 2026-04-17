@@ -1,6 +1,6 @@
 # Laravel Fiber
 
-A Fiber-based concurrency driver for Laravel's `Concurrency` facade. Uses the [Revolt](https://revolt.run) event loop and [amphp](https://amphp.org) to run tasks with real async I/O — not just sequential execution wrapped in Fibers.
+A Fiber-based concurrency driver for Laravel's `Concurrency` facade. Uses the [Revolt](https://revolt.run) event loop and [amphp](https://amphp.org) to run tasks with real async I/O, not just sequential execution wrapped in Fibers.
 
 ## How it works
 
@@ -14,7 +14,7 @@ Concurrency::driver('fiber')->run([task1, task2, task3])
   → all done → event loop stops → return results
 ```
 
-When tasks use amphp async drivers (HTTP, MySQL, Redis), they genuinely run concurrently — each Fiber suspends on I/O and others execute in the meantime. Tasks using standard blocking PHP calls run sequentially, which is safe and expected.
+When tasks use amphp async drivers (HTTP, MySQL, Redis), they genuinely run concurrently: each Fiber suspends on I/O and others execute in the meantime. Tasks using standard blocking PHP calls run sequentially, which is safe and expected.
 
 ## Requirements
 
@@ -75,7 +75,7 @@ use Amp\Http\Client\Request;
 
 $client = HttpClientBuilder::buildDefault();
 
-// These 3 HTTP requests run concurrently — total time ≈ slowest request
+// These 3 HTTP requests run concurrently, total time ≈ slowest request
 $results = Concurrency::driver('fiber')->run([
     fn () => $client->request(new Request('https://api1.example.com'))->getBody()->buffer(),
     fn () => $client->request(new Request('https://api2.example.com'))->getBody()->buffer(),
