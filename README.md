@@ -9,7 +9,7 @@ The driver runs an inline Revolt event loop within the `run()` call. No backgrou
 ```
 Concurrency::driver('fiber')->run([task1, task2, task3])
   → spawn 3 Fibers via Amp\async()
-  → Amp\Future\await() starts temporary event loop
+  → Amp\Future\awaitAll() starts temporary event loop
   → Fibers interleave on I/O suspension
   → all done → event loop stops → return results
 ```
@@ -91,6 +91,27 @@ Concurrency::driver('fiber')->defer([
     fn () => Log::info('Background task 2'),
 ]);
 ```
+
+### Results, failures and timeouts
+
+`run()` returns results keyed and ordered like the tasks you passed in, whatever order they finish in.
+
+When tasks fail, `run()` waits for every task to settle and then throws the failure that comes first in task order, like Laravel's process driver.
+
+`run()` accepts the optional `$timeout` argument of Laravel's Concurrency driver contract: an `int` (seconds) or a `CarbonInterval`. It bounds the whole call and throws `Amp\CancelledException` when it fires.
+
+```php
+use Carbon\CarbonInterval;
+
+$results = Concurrency::driver('fiber')->run([
+    fn () => slowTaskA(),
+    fn () => slowTaskB(),
+], timeout: 5); // or CarbonInterval::seconds(5)
+```
+
+Unlike the process driver, a timeout does not stop a task that is already running. A fiber cannot be cancelled from outside, so the task finishes in the background and its result is discarded. The process driver kills its child processes instead.
+
+The `$timeout` parameter matches the contract of Laravel 13.9 and later, and the driver also works with earlier 13.x releases. `composer.json` currently allows `illuminate/contracts` and `illuminate/support` `^11.0 || ^12.0 || ^13.0`.
 
 ## Driver comparison
 
