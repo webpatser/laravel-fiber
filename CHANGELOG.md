@@ -5,6 +5,12 @@ All notable changes to Laravel Fiber will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-11-18
+
+### Fixed
+- `composer.json` now requires PHP `^8.2`, matching the `illuminate/*` `^11.0 || ^12.0 || ^13.0` constraints (Laravel 11 needs PHP 8.2; the former `^8.1` was never installable).
+- README requirements now state PHP 8.2+ and Laravel 11, 12 or 13, consistent with `composer.json`.
+
 ## [1.1.0] - 2026-11-18
 
 ### Added

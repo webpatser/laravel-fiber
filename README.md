@@ -18,8 +18,8 @@ When tasks use amphp async drivers (HTTP, MySQL, Redis), they genuinely run conc
 
 ## Requirements
 
-- PHP 8.1+
-- Laravel 13.0+
+- PHP 8.2+
+- Laravel 11, 12 or 13
 
 ## Installation
 
