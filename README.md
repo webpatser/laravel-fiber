@@ -96,9 +96,9 @@ Concurrency::driver('fiber')->defer([
 
 `run()` returns results keyed and ordered like the tasks you passed in, whatever order they finish in.
 
-When tasks fail, `run()` waits for every task to settle and then throws the failure that comes first in task order, like Laravel's process driver.
+When tasks fail, `run()` waits for every task to settle and then throws the failure that comes first in task order, like Laravel's process driver. A failing task does not cancel its siblings: they run to completion, and the first failure in task order is rethrown after all tasks have finished.
 
-`run()` accepts the optional `$timeout` argument of Laravel's Concurrency driver contract: an `int` (seconds) or a `CarbonInterval`. It bounds the whole call and throws `Amp\CancelledException` when it fires.
+`run()` accepts the optional `$timeout` argument of Laravel's Concurrency driver contract: an `int` (seconds) or a `CarbonInterval`. It bounds the whole call and, when it fires, throws `Amp\CancelledException` with an `Amp\TimeoutException` as its previous exception. Laravel's process driver throws `Illuminate\Process\Exceptions\ProcessTimedOutException` instead, applies the timeout per process and kills the process; Laravel's sync driver ignores the timeout. Here the timeout stops tasks only cooperatively (see below). A `run()` with a timeout keeps the event loop alive until the timeout fires or the call ends, so a call whose tasks all wait on something that never completes ends with the timeout exception.
 
 ```php
 use Carbon\CarbonInterval;
@@ -109,7 +109,22 @@ $results = Concurrency::driver('fiber')->run([
 ], timeout: 5); // or CarbonInterval::seconds(5)
 ```
 
-Unlike the process driver, a timeout does not stop a task that is already running. A fiber cannot be cancelled from outside, so the task finishes in the background and its result is discarded. The process driver kills its child processes instead.
+The process driver kills its child processes on a timeout. A fiber cannot be killed from outside, so here cancellation is cooperative: when the timeout fires the driver requests the cancellation of every task, which a task reads with `Webpatser\LaravelFiber\TaskCancellation::current()` (null outside a task). A task that passes it to its awaits, or calls `throwIfRequested()` in a loop, stops there and unwinds through its `finally` blocks:
+
+```php
+use Webpatser\LaravelFiber\TaskCancellation;
+
+Concurrency::driver('fiber')->run([
+    function () use ($client, $request) {
+        $cancellation = TaskCancellation::current();
+
+        Amp\delay(10, cancellation: $cancellation); // stopped at the timeout
+        $response = $client->request($request, $cancellation); // amphp calls taking a Cancellation
+    },
+], timeout: 5);
+```
+
+CPU-bound code, blocking calls and awaits that do not receive the cancellation are not stopped: such a task finishes in the background and its result is discarded. A nested `run()` gives its tasks a cancellation of their own, also requested when the enclosing task's is.
 
 The `$timeout` parameter matches the contract of Laravel 13.9 and later, and the driver also works with earlier 13.x releases. `composer.json` currently allows `illuminate/contracts` and `illuminate/support` `^11.0 || ^12.0 || ^13.0`.
 
